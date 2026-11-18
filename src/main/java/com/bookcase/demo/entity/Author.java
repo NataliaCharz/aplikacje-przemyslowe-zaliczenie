@@ -19,19 +19,13 @@ public class Author {
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    @Size(min = 2, max = 100)
     @Column(name="SURNAME", nullable = false, length = 100)
     private String surname;
 
-    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name="STATUS", nullable = false)
     private AuthorStatus status;
 
-    @NotNull
-    @Min(-3000)
-    @Max(2010)
     @Column(name="YEAR_OF_BIRTH", nullable = false)
     private Integer yearOfBirth;
 

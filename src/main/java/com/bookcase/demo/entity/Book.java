@@ -22,13 +22,9 @@ public class Book {
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    @Size(min = 2, max = 500)
     @Column(name="TITLE", nullable = false)
     private String title;
 
-    @NotNull
-    @Min(10)
     @Column(name="PAGES")
     private Integer pages;
 

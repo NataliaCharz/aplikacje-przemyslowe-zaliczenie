@@ -15,11 +15,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BookDTO {
     private Long id;
-    @NotBlank
-    @Size(min = 2, max = 500)
+    @NotBlank(message = "Title cannot be empty")
+    @Size(min = 2, max = 500, message = "Title must have length between 2 and 500 characters")
     private String title;
-    @NotNull
-    @Min(10)
+    @NotNull(message = "Pages cannot be null")
+    @Min(value = 10, message = "Book must have at least 10 pages")
     private Integer pages;
     private Long authorId;
 }

@@ -1,8 +1,10 @@
 package com.bookcase.demo.service;
 
 import com.bookcase.demo.dto.AuthorDTO;
+import com.bookcase.demo.dto.AuthorStatus;
 import com.bookcase.demo.entity.Author;
 import com.bookcase.demo.exception.AuthorNotFoundException;
+import com.bookcase.demo.exception.InvalidAuthorStatusException;
 import com.bookcase.demo.mapper.AuthorMapperMapStruct;
 import com.bookcase.demo.repository.AuthorRepository;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +47,9 @@ public class AuthorService {
 
     public AuthorDTO updateAuthorService(Long id, AuthorDTO authorDTO) {
         Author authorToUpdate = getAuthorEntity(id);
+        if (authorToUpdate.getStatus() == AuthorStatus.DEAD && (authorDTO.getStatus() == AuthorStatus.ALIVE || authorDTO.getStatus() == AuthorStatus.RETIRED)) {
+            throw new InvalidAuthorStatusException();
+        };
         authorMapper.mapDtoToAuthorInMemory(authorDTO, authorToUpdate);
         this.authorRepository.save(authorToUpdate);
         return authorMapper.mapAuthorToDto(authorToUpdate);

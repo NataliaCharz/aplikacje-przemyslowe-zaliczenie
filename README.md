@@ -54,7 +54,7 @@ Błędne dane przy dodaniu (`POST`) i zmianie (`PUT`) dają **400** z listą bł
 
 ## Reguła biznesowa (R1.5) – 409
 
-Autora o statusie `DEAD` nie można zmienić z powrotem na status `ALIVE`.
+Autora o statusie `DEAD` nie można zmienić z powrotem na status `ALIVE`, czy `RETIRED`.
 Próba takiej zmiany daje odpowiedź **409 Conflict** w formacie Problem Details (`application/problem+json`).
 Reguła jest sprawdzana w warstwie serwisu.
 
@@ -103,7 +103,7 @@ _Do uzupełnienia na poziomie 5._ Co najmniej dwie role i ich uprawnienia w API 
 | R1.1 | Encja JPA w PostgreSQL z `compose.yaml`, `ddl-auto=update` | 10% | ✅ |
 | R1.2 | Lista i element po id, 404, DTO, OpenAPI | 10% | ✅ |
 | R1.3 | POST 201 + Location, PUT 200, DELETE 204, logika w serwisie | 10% | ✅ |
-| R1.4 | Bean Validation trzech pól, 400 z listą pól | 10% | ⬜ |
+| R1.4 | Bean Validation trzech pól, 400 z listą pól | 10% | ✅ |
 | R1.5 | Problem Details z jednego miejsca, reguła biznesowa 409 | 10% | ⬜ |
 | R1.6 | Panel Thymeleaf: lista, formularz, PRG | 10% | ⬜ |
 | R2.1 | Encja podrzędna, lista i dodanie dla autora | 4% | ⬜ |
@@ -120,7 +120,7 @@ _Do uzupełnienia na poziomie 5._ Co najmniej dwie role i ich uprawnienia w API 
 | R5.3 | Spring Security, BCrypt, formularz + HTTP Basic, 401 | 3% | ⬜ |
 | R5.4 | Dwie role, 403 | 2% | ⬜ |
 
-**Deklarowana suma:** 30% (R1.1, R1.2, R1.3).
+**Deklarowana suma:** 40% (R1.1, R1.2, R1.3, R1.4).
 
 ## Deklaracja AI
 

@@ -86,3 +86,25 @@ nie są jeszcze w kodzie. Na moją prośbę zapisało plik w repozytorium i zrob
 ze stopką `AI-Assisted`.
 
 **Co przyjęłam:** treść `README.md` przyjęłam bez zmian. Kod aplikacji nie był zmieniany.
+
+## Wpis 5
+
+| |                                          |
+|---|------------------------------------------|
+| Data | 2026-11-19                               |
+| Narzędzie | Claude Code (model Claude Opus 5.5)      |
+| Element projektu (wg deklaracji) | Szukanie błędów, wyjaśnianie pojęć i API |
+| Link / eksport rozmowy | Wpis5.txt                                 |
+
+**Cel:** sprawdzenie, czy wymaganie R1.4 (Bean Validation trzech pól według README, przy dodaniu
+i zmianie, 400 z listą błędnych pól, brak zapisu błędnych danych) jest spełnione.
+
+**Co zrobiło AI:** porównało reguły z `README.md` z adnotacjami w `AuthorDTO`, sprawdziło `@Valid`
+w POST i PUT w `AuthorController`, `GlobalExceptionHandler` i zależność `spring-boot-starter-validation`,
+a także uruchomiło `./gradlew compileJava`. Wskazało błąd kompilacji: brak `return problemDetail;`
+w metodzie `handle400Enum`. Zasugerowało krótki opis `detail` zamiast `ex.getMessage()` oraz zwróciło
+uwagę na niespójność reguły 409: kod blokował DEAD → ALIVE i DEAD → RETIRED, a README opisywało tylko DEAD → ALIVE.
+
+**Co przyjęłam:** błąd znalazłam i poprawiłam samodzielnie (dodany `return`). Opis błędu w obu handlerach
+400 zmieniłam na `"Validation failed"`, a regułę 409 w `README.md` uzupełniłam o status `RETIRED`.
+AI nie zmieniało kodu w repozytorium.
