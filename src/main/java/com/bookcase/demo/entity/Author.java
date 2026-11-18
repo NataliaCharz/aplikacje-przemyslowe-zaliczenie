@@ -1,12 +1,10 @@
 package com.bookcase.demo.entity;
 
-import com.bookcase.demo.dto.AuthorSex;
+import com.bookcase.demo.dto.AuthorStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Entity
@@ -15,30 +13,27 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class Author {
 
     @Id
-    @SequenceGenerator(name="author_id_seq",sequenceName="author_id_seq", allocationSize = 1)
-    @GeneratedValue(strategy=GenerationType.SEQUENCE, generator = "author_id_seq")
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="NAME")
-    private String name;
-
-    @Column(name="SURNAME")
+    @NotBlank
+    @Size(min = 2, max = 100)
+    @Column(name="SURNAME", nullable = false, length = 100)
     private String surname;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name="SEX", columnDefinition = "sex")
-    private AuthorSex sex;
+    @Column(name="STATUS", nullable = false)
+    private AuthorStatus status;
 
-    @Column(name="DATE_OF_BIRTH")
-    private LocalDate dateOfBirth;
-
-    @Column(name="IS_ALIVE")
-    private Boolean alive;
+    @NotNull
+    @Min(-3000)
+    @Max(2010)
+    @Column(name="YEAR_OF_BIRTH", nullable = false)
+    private Integer yearOfBirth;
 
     @ToString.Exclude
     @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "author")

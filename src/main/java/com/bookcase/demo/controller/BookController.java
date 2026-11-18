@@ -1,16 +1,17 @@
 package com.bookcase.demo.controller;
 
-import com.bookcase.demo.dto.AuthorDTO;
-import com.bookcase.demo.dto.BookCategory;
 import com.bookcase.demo.dto.BookDTO;
 import com.bookcase.demo.mapper.BookMapper;
 import com.bookcase.demo.service.BookService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
-import java.util.stream.Collectors;
-
 
 @RestController
 @RequiredArgsConstructor
@@ -22,49 +23,50 @@ public class BookController {
 
     @GetMapping()
     public List<BookDTO> getBooks(){
-        return bookService.getBooksService()
-                .stream()
-                .map(bookMapper::mapBookToDto).collect(Collectors.toList());
-    }
-
-    @GetMapping("/search")
-    public List<BookDTO> getBooksContainingCharacters(@RequestParam String character) {
-        return bookService.getBooksContainingCharactersService(character)
-                .stream()
-                .map(bookMapper::mapBookToDto)
-                .collect(Collectors.toList());
+        return this.bookMapper.mapBookToDtoList(this.bookService.getBooksService());
     }
 
     @GetMapping("/{id}")
     public BookDTO getBookById(@PathVariable(name = "id") Long id) {
-        return bookMapper.mapBookToDto(bookService.getBookByIdService(id));
+        return this.bookMapper.mapBookToDto(bookService.getBookByIdService(id));
     }
 
-    @GetMapping("/author")
-    public List<AuthorDTO> getBookAuthor(@RequestParam String title) {
-        return this.bookService.getBookAuthorService(title);
+    @PostMapping()
+    public ResponseEntity<BookDTO> addNewBook(@Valid @RequestBody BookDTO bookDTO) {
+        BookDTO newBook = this.bookService.createNewBookService(bookDTO);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("{id}")
+                .buildAndExpand(newBook.getId())
+                .toUri();
+        return ResponseEntity.created(uri).body(newBook);
     }
 
-    @GetMapping("/find-by-category/{category}")
-    public List<BookDTO> getBookByCategory(@PathVariable(name = "category") BookCategory category) {
-        return bookService.getBookByCategoryService(category).stream()
-                .map(bookMapper::mapBookToDto)
-                .collect(Collectors.toList());
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public BookDTO updateBook(@PathVariable("id") Long id, @Valid @RequestBody BookDTO bookDTO) {
+        return bookService.updateBookDTOService(id, bookDTO);
     }
 
-    @PostMapping("/add")
-    public void addNewBook(@RequestBody BookDTO bookDTO) {
-        bookService.createNewBookService(bookMapper.mapBookFromDto(bookDTO), bookDTO.getAuthorId());
-    }
-
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteBook(@PathVariable("id") Long id) {
         bookService.deleteBookByIdService(id);
     }
 
-    @PutMapping("/change/{id}")
-    public BookDTO updateBook(@PathVariable("id") Long id, @RequestBody BookDTO bookDTO) {
-        return bookService.updateBookDTOService(id, bookDTO);
-    }
+//    @GetMapping("/search")
+//    public List<BookDTO> getBooksContainingCharacters(@RequestParam String character) {
+//        return bookService.getBooksContainingCharactersService(character)
+//                .stream()
+//                .map(bookMapper::mapBookToDto)
+//                .collect(Collectors.toList());
+//    }
+
+//
+//    @GetMapping("/author")
+//    public List<AuthorDTO> getBookAuthor(@RequestParam String title) {
+//        return this.bookService.getBookAuthorService(title);
+//    }
+//
+
 
 }

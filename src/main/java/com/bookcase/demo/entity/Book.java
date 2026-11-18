@@ -1,15 +1,14 @@
 package com.bookcase.demo.entity;
 
-import com.bookcase.demo.dto.BookCategory;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Builder
@@ -20,23 +19,18 @@ import java.time.LocalDateTime;
 public class Book {
 
     @Id
-    @SequenceGenerator(name="book_id_seq", sequenceName="book_id_seq", allocationSize = 1)
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
+    @Size(min = 2, max = 500)
     @Column(name="TITLE", nullable = false)
     private String title;
 
+    @NotNull
+    @Min(10)
     @Column(name="PAGES")
     private Integer pages;
-
-    @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name="CATEGORY")
-    private BookCategory category;
-
-    @Column(name = "CREATED_AT")
-    private LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="AUTHOR_ID", nullable = false)

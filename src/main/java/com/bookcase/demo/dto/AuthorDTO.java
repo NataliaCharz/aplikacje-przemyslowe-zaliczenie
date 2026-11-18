@@ -1,14 +1,13 @@
 package com.bookcase.demo.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.List;
-
 
 @Data
 @Builder
@@ -17,15 +16,15 @@ import java.util.List;
 public class AuthorDTO {
 
     private Long id;
-    private String name;
+    @NotBlank
+    @Size(min = 2, max = 100)
     private String surname;
-    private AuthorSex sex;
-    private LocalDate dateOfBirth;
-    private Integer age;
-    private Boolean alive;
+    @NotNull
+    private AuthorStatus status;
+    @NotNull
+    @Min(-3000)
+    @Max(2010)
+    private Integer yearOfBirth;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<BookDTO> bookDTOS;
-
-
-
 }

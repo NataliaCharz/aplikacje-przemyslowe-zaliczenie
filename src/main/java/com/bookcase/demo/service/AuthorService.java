@@ -1,24 +1,16 @@
 package com.bookcase.demo.service;
 
 import com.bookcase.demo.dto.AuthorDTO;
-import com.bookcase.demo.dto.BookDTO;
 import com.bookcase.demo.entity.Author;
-import com.bookcase.demo.entity.Book;
 import com.bookcase.demo.exception.AuthorNotFoundException;
 import com.bookcase.demo.mapper.AuthorMapperMapStruct;
-import com.bookcase.demo.mapper.AuthorMapperForPartialUpdates;
-import com.bookcase.demo.mapper.BookMapper;
 import com.bookcase.demo.repository.AuthorRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,24 +18,13 @@ import java.util.stream.Collectors;
 public class AuthorService {
 
     private final AuthorRepository authorRepository;
-    private final AuthorMapperForPartialUpdates authorMapperForPartialUpdates;
+//    private final AuthorMapperForPartialUpdates authorMapperForPartialUpdates;
     @Qualifier("authorMapperMapStruct")
     private final AuthorMapperMapStruct authorMapper;
-    private final BookMapper bookMapper;
-
+//    private final BookMapper bookMapper;
 
     public List<Author> getAllAuthorsService() {
         return this.authorRepository.findAll();
-    }
-
-    public List<Author> getAuthorsWithBooksService() {
-        return this.authorRepository.findAllWithBooks();
-    }
-
-    public List<Author> getAuthorsContainingCharactersInSurnameService(String character) {
-        return this.authorRepository.findAll().stream()
-                .filter(author -> author.getSurname().toLowerCase().contains(character.toLowerCase()))
-                .collect(Collectors.toList());
     }
 
     public Author getAuthorByIdService(Long id) throws AuthorNotFoundException {
@@ -51,57 +32,78 @@ public class AuthorService {
                 .orElseThrow(() -> new AuthorNotFoundException(id));
     }
 
-    public List<BookDTO> getBooksByAuthorSurnameService(String surname){
-        List<Author> authorList = this.authorRepository.findBySurnameContainingIgnoreCase(surname);
-        List<Book> bookList = authorList.stream()
-                .flatMap(author -> author.getBooks().stream())
-                .collect(Collectors.toList());
-        return bookMapper.mapBookToDtoList(bookList);
+    public AuthorDTO createAuthorService(AuthorDTO authorDTO) {
+        Author newAuthor = Author.builder()
+                .surname(authorDTO.getSurname())
+                .status(authorDTO.getStatus())
+                .yearOfBirth(authorDTO.getYearOfBirth())
+                .build();
+        Author saved = this.authorRepository.save(newAuthor);
+        return authorMapper.mapAuthorToDto(saved);
     }
 
-    public List<Author> getAuthorsDeadOrALiveService(Boolean isALive){
-        List<Author> allAuthors = this.authorRepository.findAll();
-        return allAuthors.stream()
-                .filter(author -> author.getAlive().equals(isALive))
-                .toList();
+
+    public AuthorDTO updateAuthorService(Long id, AuthorDTO authorDTO) {
+        Author authorToUpdate = getAuthorByIdService(id);
+        authorMapper.mapDtoToAuthorInMemory(authorDTO, authorToUpdate);
+        this.authorRepository.save(authorToUpdate);
+        return authorMapper.mapAuthorToDto(authorToUpdate);
     }
 
     public void deleteAuthorService(Long id) {
         Author authorToDelete = getAuthorByIdService(id);
         this.authorRepository.delete(authorToDelete);
     }
+//
+//    public List<Author> getAuthorsWithBooksService() {
+//        return this.authorRepository.findAllWithBooks();
+//    }
+//
+//    public List<Author> getAuthorsContainingCharactersInSurnameService(String character) {
+//        return this.authorRepository.findAll().stream()
+//                .filter(author -> author.getSurname().toLowerCase().contains(character.toLowerCase()))
+//                .collect(Collectors.toList());
+//    }
+//
+//    public List<BookDTO> getBooksByAuthorSurnameService(String surname){
+//        List<Author> authorList = this.authorRepository.findBySurnameContainingIgnoreCase(surname);
+//        List<Book> bookList = authorList.stream()
+//                .flatMap(author -> author.getBooks().stream())
+//                .collect(Collectors.toList());
+//        return bookMapper.mapBookToDtoList(bookList);
+//    }
+//
+//    public List<Author> getAuthorsDeadOrALiveService(Boolean isALive){
+//        List<Author> allAuthors = this.authorRepository.findAll();
+//        return allAuthors.stream()
+//                .filter(author -> author.getAlive().equals(isALive))
+//                .toList();
+//    }
+//
 
-    @ResponseStatus(HttpStatus.CREATED)
-    public void saveAuthorService(Author author) {
-        this.authorRepository.save(author);
-    }
+//
 
-    public AuthorDTO updateAuthorService(Long id, AuthorDTO authorDTO) {
-        Author authorToUpdate = getAuthorByIdService(id);
-        authorMapper.mapAuthorDTOToAuthorInMemory(authorDTO, authorToUpdate);
-        this.authorRepository.save(authorToUpdate);
-        return authorMapper.mapAuthorToDTO(authorToUpdate);
-    }
 
-    @Transactional
-    public AuthorDTO partialUpdateAuthorService(Long id, AuthorDTO authorDTO) {
-        Author author = authorRepository.findById(id).orElseThrow(() -> new AuthorNotFoundException(id));
-        log.info("Author before update: {}", author);
-        authorMapperForPartialUpdates.map(authorDTO, author);
-        log.info("Author after update: {}", author);
-        return authorMapper.mapAuthorToDTO(author);
-    }
-
-    public List<Book> getBooksByAuthorIdService(Long authorId) {
-        return authorRepository.findByIdWithBooks(authorId)
-                .orElseThrow(() -> new AuthorNotFoundException(authorId))
-                .getBooks();
-    }
-
-    public Long getAuthorsIdBySurnameService(String surname) {
-        return authorRepository.findBySurnameIgnoreCase(surname)
-                .map(Author::getId)
-                .orElseThrow(() -> new AuthorNotFoundException("No author found with surname containing: " + surname));
-    }
+//
+//    @Transactional
+//    public AuthorDTO partialUpdateAuthorService(Long id, AuthorDTO authorDTO) {
+//        Author author = authorRepository.findById(id).orElseThrow(() -> new AuthorNotFoundException(id));
+//        log.info("Author before update: {}", author);
+//        authorMapperForPartialUpdates.map(authorDTO, author);
+//        log.info("Author after update: {}", author);
+//        return authorMapper.mapAuthorToDTO(author);
+//    }
+//
+//    public List<Book> getBooksByAuthorIdService(Long authorId) {
+//        return authorRepository.findByIdWithBooks(authorId)
+//                .orElseThrow(() -> new AuthorNotFoundException(authorId))
+//                .getBooks();
+//    }
+//
+//    public Long getAuthorsIdBySurnameService(String surname) {
+//        return authorRepository.findBySurnameIgnoreCase(surname)
+//                .map(Author::getId)
+//                .orElseThrow(() -> new AuthorNotFoundException("No author found with surname containing: " + surname));
+//    }
 }
 

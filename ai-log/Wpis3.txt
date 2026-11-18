@@ -1,0 +1,270 @@
+ ▐▛███▛█   Claude Code v2.1.327
+▝▜██████▀  Opus 5.5 · Claude Pro
+ ▝▝   ▝▝   ~\IdeaProjects\LibraryApp-zaliczenie
+
+
+❯ Zgodnie z plikiem wymagania_projektu.pdf sprawdź czy dobrze zostało           
+  zaimplementowane wymaganie R1.3.                                              
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Bash(cd /c/Users/charz/IdeaProjects/LibraryApp-zaliczenie; cat -n
+      src/main/java/com/bookcase/demo/controller/AuthorController.java
+      src/main/java/com/bookcase/demo/se…)
+  ⎿       1  package com.bookcase.demo.controller;
+          2
+          3  import com.bookcase.demo.dto.AuthorDTO;
+     … +242 lines (ctrl+o to expand)
+
+● Bash(cd /c/Users/charz/IdeaProjects/LibraryApp-zaliczenie; cat -n
+      src/main/java/com/bookcase/demo/mapper/AuthorMapperMapStruct.java
+      src/main/java/com/bookcase/demo/d…)
+  ⎿  Error: Exit code 2
+          1  package com.bookcase.demo.mapper;
+          2  
+          3  import com.bookcase.demo.dto.AuthorDTO;
+          4  import com.bookcase.demo.entity.Author;
+          5  import org.mapstruct.*;
+          6  
+          7  import java.util.List;
+          8  
+          9  @Mapper(componentModel = "spring", unmappedTargetPolicy = 
+     ReportingPolicy.IGNORE, uses = {BookMapper.class})
+
+     … +41 lines (ctrl+o to expand)
+
+● Bash(cd /c/Users/charz/IdeaProjects/LibraryApp-zaliczenie; cat -n
+      src/main/java/com/bookcase/demo/entity/Author.java; ls
+      build/generated/sources/annotationProcessor/…)
+  ⎿  Error: Exit code 2
+          1  package com.bookcase.demo.entity;
+          2  
+          3  import com.bookcase.demo.dto.AuthorStatus;
+          4  import jakarta.persistence.*;
+          5  import jakarta.validation.constraints.*;
+          6  import lombok.*;
+          7  
+          8  import java.util.List;
+          9  
+     … +33 lines (ctrl+o to expand)
+
+● Przeczytałam wymagania i kod AuthorController / AuthorService / mappera.
+  Poniżej wynik.
+
+  R1.3 nie jest jeszcze poprawnie zrobione
+
+  Wymaganie: POST zwraca 201 z nagłówkiem Location, PUT/PATCH zwraca 200, DELETE
+  zwraca 204, a logika siedzi w serwisie.
+
+  ┌────────────────┬──────────────┬────────────────────────────────────────┐
+  │    Element     │     Stan     │                 Uwagi                  │
+  ├────────────────┼──────────────┼────────────────────────────────────────┤
+  │ POST → 201 +   │ ⚠️ częściowo │ Kod 201 jest, ale Location wskazuje    │
+  │ Location       │              │ zły adres                              │
+  ├────────────────┼──────────────┼────────────────────────────────────────┤
+  │ PUT → 200      │ ❌ błąd      │ Dwa błędy, opisane niżej               │
+  ├────────────────┼──────────────┼────────────────────────────────────────┤
+  │ DELETE → 204   │ ✅ OK        │ Dla nieznanego id zwraca 404 przez     │
+  │                │              │ getAuthorByIdService                   │
+  ├────────────────┼──────────────┼────────────────────────────────────────┤
+  │ Logika w       │ ✅ w         │ Kontroler tylko woła serwis            │
+  │ serwisie       │ większości   │                                        │
+  └────────────────┴──────────────┴────────────────────────────────────────┘
+
+  Błąd 1: Location prowadzi do nieistniejącego adresu
+
+  AuthorController.java:37-43. Endpoint ma ścieżkę /add, a fromCurrentRequest()
+  dopisuje /{id} do bieżącego adresu. Wychodzi Location: 
+  http://.../api/authors/add/5, a pod tym adresem nic nie ma. Powinno być
+  /api/authors/5.
+  Poprawka: @PostMapping bez "/add". Wtedy POST idzie na /api/authors, co jest
+  też zgodne z konwencją REST.
+
+  Błąd 2: PUT używa @RequestParam zamiast @PathVariable
+
+  AuthorController.java:49. Ścieżka to /{id}, ale parametr jest oznaczony
+  @RequestParam(name = "id"). Przez to PUT /api/authors/5 zwraca 400 (brak
+  parametru ?id=). Działa tylko PUT /api/authors/5?id=5.
+  Poprawka: @PathVariable(name = "id") Long id.
+
+  Błąd 3 (poważny): PUT może dodać nowego autora zamiast zmienić istniejącego
+
+  AuthorService.java:139-144 razem z mapDtoToAuthorInMemory. MapStruct kopiuje
+  także pole id z DTO do encji. Dlatego:
+  - jeśli w body nie ma id, encja dostaje id = null, a save() robi INSERT, czyli
+    powstaje nowy rekord, a stary zostaje bez zmian;
+  - jeśli w body jest inne id niż w ścieżce, zmieniony zostanie inny autor.
+
+  Poprawka: w mapperze dodać @Mapping(target = "id", ignore = true) (i najlepiej
+  @Mapping(target = "books", ignore = true)) nad mapDtoToAuthorInMemory.
+
+  Uwagi drobne (nie blokują R1.3)
+
+  - Metody serwisu są niespójne: get… zwracają encję i mapowanie robi kontroler,
+    a create/update zwracają już DTO. To działa, ale na obronie łatwiej będzie
+    bronić wersji, w której mapowaniem zawsze zajmuje się serwis.
+  - Reguła biznesowa „DEAD → ALIVE daje 409” nie jest jeszcze sprawdzana w
+    updateAuthorService. To dotyczy R1.5, nie R1.3.
+  - @Qualifier na polu przy @RequiredArgsConstructor nie działa bez
+    lombok.config. Teraz to nie przeszkadza, bo jest tylko jeden bean mappera.
+
+  Zgodnie z ustalonymi zasadami niczego nie zmieniałam. Czy mam przygotować te
+  trzy poprawki z diffem przed → po do akceptacji?
+
+✻ Sautéed for 44s · done 22:51
+
+❯ Poprawiłam błędy, któe wskazałeś. Możesz wykonać deklarację AI.               
+
+● Sprawdzam Twoje poprawki i obecny dziennik ai-log, żeby przygotować wpis.
+
+● Bash(cd /c/Users/charz/IdeaProjects/LibraryApp-zaliczenie; git diff --
+      src/main/java/com/bookcase/demo/controller/AuthorController.java
+      src/main/java/com/bookcase/de…)
+  ⎿  Error: Exit code 2
+     diff --git 
+     a/src/main/java/com/bookcase/demo/controller/AuthorController.java 
+     b/src/main/java/com/bookcase/demo/controller/AuthorController.java
+     index 0413e26..8841e8f 100644
+     --- a/src/main/java/com/bookcase/demo/controller/AuthorController.java
+     +++ b/src/main/java/com/bookcase/demo/controller/AuthorController.java
+     @@ -1,15 +1,17 @@
+      package com.bookcase.demo.controller;
+      
+      import com.bookcase.demo.dto.AuthorDTO;
+     -import com.bookcase.demo.dto.BookDTO;
+     … +188 lines (ctrl+o to expand)
+
+● Bash(cd /c/Users/charz/IdeaProjects/LibraryApp-zaliczenie; cat -n
+      src/main/java/com/bookcase/demo/mapper/AuthorMapperMapStruct.java; sed -n
+      '/updateAuthorService/,/^…)
+  ⎿       1  package com.bookcase.demo.mapper;
+          2
+          3  import com.bookcase.demo.dto.AuthorDTO;
+     … +28 lines (ctrl+o to expand)
+
+● Sprawdziłam poprawki i wszystkie trzy są w kodzie:
+  - POST jest teraz na @PostMapping(), więc Location wskazuje /api/authors/{id}.
+  - PUT używa @PathVariable.
+  - W mapperze mapDtoToAuthorInMemory ma ignore dla id i books, więc PUT nie
+    utworzy już nowego rekordu.
+
+  Nie uruchamiałam aplikacji, sprawdziłam tylko kod.
+
+  Zgodnie z naszymi ustaleniami plik DEKLARACJA_AI.md piszemy dopiero na końcu
+  projektu. Przygotowałam więc Wpis 3 do ai-log/README.md dla tej rozmowy.
+  Format jest taki sam jak we wpisach 1 i 2:
+
+  ## Wpis 3
+
+  | |                                          |
+  |---|------------------------------------------|
+  | Data | 2026-11-18                               |
+  | Narzędzie | Claude Code (model Claude Opus 5.5)      |
+  | Element projektu (wg deklaracji) | Szukanie błędów, wyjaśnianie pojęć i API
+  |
+  | Link / eksport rozmowy | Wpis3.txt                                 |
+
+  **Cel:** sprawdzenie, czy wymaganie R1.3 (POST 201 z `Location`, PUT 200,
+  DELETE 204,
+  logika w serwisie) jest poprawnie zaimplementowane.
+
+  **Co zrobiło AI:** przeanalizowało `AuthorController`, `AuthorService`,
+  `AuthorMapperMapStruct`,
+  `AuthorDTO` i `Author` i wskazało trzy błędy: nagłówek `Location` wskazywał
+  nieistniejący adres
+  `/api/authors/add/{id}` (przez ścieżkę `/add` w `@PostMapping`), PUT używał
+  `@RequestParam`
+  zamiast `@PathVariable` (więc `PUT /api/authors/{id}` dawał 400), a mapper
+  kopiował `id` z DTO
+  do encji, przez co PUT bez `id` w body tworzył nowy rekord zamiast zmienić
+  istniejący.
+  Zaproponowało poprawki i zwróciło uwagę na drobne niespójności (mapowanie raz
+  w kontrolerze,
+  raz w serwisie; brak sprawdzania reguły DEAD → ALIVE, która należy do R1.5).
+
+  **Co przyjęłam:** wszystkie trzy poprawki wprowadziłam samodzielnie:
+  `@PostMapping()` bez `/add`,
+  `@PathVariable` w PUT oraz `@Mapping(target = "id", ignore = true)` i
+  `@Mapping(target = "books", ignore = true)` w `mapDtoToAuthorInMemory`.
+  AI nie zmieniało kodu w repozytorium.
+
+  Eksport rozmowy do ai-log/Wpis3.txt musisz zrobić sama (np. komendą /export),
+  tak jak przy poprzednich wpisach.
+
+  Czy mogę dopisać ten wpis na końcu ai-log/README.md?
+
+✻ Brewed for 26s · done 22:59
+
+❯ tak, dopisz                                                                   
+
+● Bash(cd /c/Users/charz/IdeaProjects/LibraryApp-zaliczenie; tail -c 1
+      ai-log/README.md | od -c | head -1; cat >> ai-log/README.md <<'EOF'…)
+  ⎿  0000000  \n
+
+     ## Wpis 3
+     … +23 lines (ctrl+o to expand)
+  ⎿  Updated ai-log\README.md +25
+      40  **Co przyjęłam:** samodzielnie zmieniłam pole daty na `yearOfBi
+          rth` (Integer), enum na `AuthorStatus`
+      41  (ALIVE, RETIRED, DEAD), usunęłam `OpenApiConfig` i katalog `bui
+          ld/`. Regułę biznesową zmieniłam
+      42  na: autora ze statusem DEAD nie można zmienić na ALIVE. AI nie
+          zmieniało kodu w repozytorium.
+      43 +                                                               
+      44 +## Wpis 3                                                      
+      45 +                                                               
+      46 +| |                                          |                 
+      47 +|---|------------------------------------------|               
+      48 +| Data | 2026-11-18                               |            
+      49 +| Narzędzie | Claude Code (model Claude Opus 5.5)      |       
+      50 +| Element projektu (wg deklaracji) | Szukanie błędów, wyjaśnian
+         +ie pojęć i API |                                               
+      51 +| Link / eksport rozmowy | Wpis3.txt                           
+         +      |                                                        
+      52 +                                                               
+      53 +**Cel:** sprawdzenie, czy wymaganie R1.3 (POST 201 z `Location`
+         +, PUT 200, DELETE 204,                                         
+      54 +logika w serwisie) jest poprawnie zaimplementowane.            
+      55 +                                                               
+      56 +**Co zrobiło AI:** przeanalizowało `AuthorController`, `AuthorS
+         +ervice`, `AuthorMapperMapStruct`,                              
+      57 +`AuthorDTO` i `Author` i wskazało trzy błędy: nagłówek `Locatio
+         +n` wskazywał nieistniejący adres                               
+      58 +`/api/authors/add/{id}` (przez ścieżkę `/add` w `@PostMapping`)
+         +, PUT używał `@RequestParam`                                   
+      59 +zamiast `@PathVariable` (więc `PUT /api/authors/{id}` dawał 400
+         +), a mapper kopiował `id` z DTO                                
+      60 +do encji, przez co PUT bez `id` w body tworzył nowy rekord zami
+         +ast zmienić istniejący.                                        
+      61 +Zaproponowało poprawki i zwróciło uwagę na drobne niespójności 
+         +(mapowanie raz w kontrolerze,                                  
+      62 +raz w serwisie; brak sprawdzania reguły DEAD → ALIVE, która nal
+         +eży do R1.5).                                                  
+      63 +                                                               
+      64 +**Co przyjęłam:** wszystkie trzy poprawki wprowadziłam samodzie
+         +lnie: `@PostMapping()` bez `/add`,                             
+      65 +`@PathVariable` w PUT oraz `@Mapping(target = "id", ignore = tr
+         +ue)` i                                                         
+      66 +`@Mapping(target = "books", ignore = true)` w `mapDtoToAuthorIn
+         +Memory`.                                                       
+      67 +AI nie zmieniało kodu w repozytorium.                          
+
+● Bash(cd "/c/Users/charz/.claude/projects/C--Users-charz-IdeaProjects-LibraryAp
+      p-zaliczenie/memory"; sed -i 's/- Status of requirements: R1.1 checked
+      (entry 1), R1.2…)
+  ⎿  15:- Status of requirements: R1.1 checked (entry 1), R1.2 checked (ent
+     ry 2), R1.3 checked and fixed by user (entry 3: POST /api/authors, PUT
+      @PathVariable, mapper ignores id/books).
+  ⎿  Shell cwd was reset to 
+     C:\Users\charz\IdeaProjects\LibraryApp-zaliczenie
+
+● Wpis 3 jest dopisany na końcu ai-log/README.md, w tej samej treści, którą
+  zaakceptowałaś. Wpisy 1 i 2 zostały bez zmian.
+
+  Musisz jeszcze sama wyeksportować tę rozmowę do ai-log/Wpis3.txt (np. komendą
+  /export), bo wpis się do tego pliku odwołuje.
+
+  Niczego nie commitowałam. Jeśli chcesz zrobić commit, najpierw pokażę Ci listę
+  plików i treść wiadomości do akceptacji.
+
+✻ Baked for 25s · done 23:01
