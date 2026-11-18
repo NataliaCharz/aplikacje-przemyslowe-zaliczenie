@@ -65,3 +65,24 @@ raz w serwisie; brak sprawdzania reguły DEAD → ALIVE, która należy do R1.5)
 `@PathVariable` w PUT oraz `@Mapping(target = "id", ignore = true)` i
 `@Mapping(target = "books", ignore = true)` w `mapDtoToAuthorInMemory`.
 AI nie zmieniało kodu w repozytorium.
+
+## Wpis 4
+
+| |                                          |
+|---|------------------------------------------|
+| Data | 2026-11-18                               |
+| Narzędzie | Claude Code (model Claude Opus 5.5)      |
+| Element projektu (wg deklaracji) | Dokumentacja: README, komentarze |
+| Link / eksport rozmowy | Wpis4.txt                                 |
+
+**Cel:** przygotowanie pliku `README.md` zgodnie z częścią „Oddanie” w `wymagania_projektu.pdf`.
+
+**Co zrobiło AI:** przeczytało wymagania oraz kod (`build.gradle`, `compose.yaml`, `application.yml`,
+encje, DTO, kontrolery, serwisy, `GlobalExceptionHandler`) i napisało całą treść nowego `README.md`:
+polecenia uruchomienia, encje `Author` i `Book` z regułami walidacji, regułę biznesową 409
+(DEAD → ALIVE), tabele endpointów REST, puste sekcje do uzupełnienia (R3.1, R4.1, R5.4) i listę wymagań
+z zaznaczonymi R1.1–R1.3. Zwróciło uwagę, że reguła 409 i Problem Details dla błędów walidacji
+nie są jeszcze w kodzie. Na moją prośbę zapisało plik w repozytorium i zrobiło commit `d354d27`
+ze stopką `AI-Assisted`.
+
+**Co przyjęłam:** treść `README.md` przyjęłam bez zmian. Kod aplikacji nie był zmieniany.
