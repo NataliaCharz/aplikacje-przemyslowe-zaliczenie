@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,17 +19,16 @@ import java.util.List;
 public class AuthorService {
 
     private final AuthorRepository authorRepository;
-//    private final AuthorMapperForPartialUpdates authorMapperForPartialUpdates;
     @Qualifier("authorMapperMapStruct")
     private final AuthorMapperMapStruct authorMapper;
 //    private final BookMapper bookMapper;
 
-    public List<Author> getAllAuthorsService() {
-        return this.authorRepository.findAll();
+    public List<AuthorDTO> getAllAuthorsService() {
+        return this.authorRepository.findAll().stream().map(authorMapper::mapAuthorToDto).collect(Collectors.toList());
     }
 
-    public Author getAuthorByIdService(Long id) throws AuthorNotFoundException {
-        return this.authorRepository.findById(id)
+    public AuthorDTO getAuthorByIdService(Long id) throws AuthorNotFoundException {
+        return this.authorRepository.findById(id).map(authorMapper::mapAuthorToDto)
                 .orElseThrow(() -> new AuthorNotFoundException(id));
     }
 
@@ -44,15 +44,20 @@ public class AuthorService {
 
 
     public AuthorDTO updateAuthorService(Long id, AuthorDTO authorDTO) {
-        Author authorToUpdate = getAuthorByIdService(id);
+        Author authorToUpdate = getAuthorEntity(id);
         authorMapper.mapDtoToAuthorInMemory(authorDTO, authorToUpdate);
         this.authorRepository.save(authorToUpdate);
         return authorMapper.mapAuthorToDto(authorToUpdate);
     }
 
     public void deleteAuthorService(Long id) {
-        Author authorToDelete = getAuthorByIdService(id);
+        Author authorToDelete = getAuthorEntity(id);
         this.authorRepository.delete(authorToDelete);
+    }
+
+    private Author getAuthorEntity(Long id){
+        return this.authorRepository.findById(id)
+                .orElseThrow(() -> new AuthorNotFoundException(id));
     }
 //
 //    public List<Author> getAuthorsWithBooksService() {

@@ -15,7 +15,7 @@ public interface AuthorMapperMapStruct {
     @Mapping(target = "books", ignore = true)
     void mapDtoToAuthorInMemory(AuthorDTO authorDTO, @MappingTarget Author author);
     List<AuthorDTO> mapAuthorToDtoList(List<Author> authors);
-//    Author mapDtoToAuthor(AuthorDTO authorDTO);
+    Author mapDtoToAuthor(AuthorDTO authorDTO);
 
 }
 

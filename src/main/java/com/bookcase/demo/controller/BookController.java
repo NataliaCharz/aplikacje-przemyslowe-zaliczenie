@@ -19,16 +19,15 @@ import java.util.List;
 public class BookController {
 
     private final BookService bookService;
-    private final BookMapper bookMapper;
 
     @GetMapping()
     public List<BookDTO> getBooks(){
-        return this.bookMapper.mapBookToDtoList(this.bookService.getBooksService());
+        return this.bookService.getBooksService();
     }
 
     @GetMapping("/{id}")
     public BookDTO getBookById(@PathVariable(name = "id") Long id) {
-        return this.bookMapper.mapBookToDto(bookService.getBookByIdService(id));
+        return bookService.getBookByIdService(id);
     }
 
     @PostMapping()

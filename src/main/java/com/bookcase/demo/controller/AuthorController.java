@@ -20,18 +20,15 @@ import java.util.List;
 public class AuthorController {
 
     private final AuthorService authorService;
-    @Qualifier("authorMapperMapStruct")
-    private final AuthorMapperMapStruct authorMapper;
-//    private final BookMapper bookMapper;
 
     @GetMapping()
     public List<AuthorDTO> getAuthors(){
-        return authorMapper.mapAuthorToDtoList(authorService.getAllAuthorsService());
+        return authorService.getAllAuthorsService();
     }
 
     @GetMapping("/{id}")
     public AuthorDTO getAuthorById(@PathVariable(name = "id") Long id) {
-        return authorMapper.mapAuthorToDto(authorService.getAuthorByIdService(id));
+        return authorService.getAuthorByIdService(id);
     }
 
     @PostMapping()
