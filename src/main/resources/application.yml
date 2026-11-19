@@ -16,6 +16,10 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  mvc:
+    problem-details:
+      enabled: true
+
 
 logging:
   level:

@@ -108,3 +108,27 @@ uwagę na niespójność reguły 409: kod blokował DEAD → ALIVE i DEAD → RE
 **Co przyjęłam:** błąd znalazłam i poprawiłam samodzielnie (dodany `return`). Opis błędu w obu handlerach
 400 zmieniłam na `"Validation failed"`, a regułę 409 w `README.md` uzupełniłam o status `RETIRED`.
 AI nie zmieniało kodu w repozytorium.
+
+## Wpis 6
+
+| |                                          |
+|---|------------------------------------------|
+| Data | 2026-11-19                               |
+| Narzędzie | Claude Code (model Claude Opus 5.5)      |
+| Element projektu (wg deklaracji) | Szukanie błędów, wyjaśnianie pojęć i API |
+| Link / eksport rozmowy | Wpis6.txt                                 |
+
+**Cel:** sprawdzenie, czy wymaganie R1.5 (wszystkie błędy API 400, 404, 409 jako Problem Details
+z jednego miejsca w kodzie, bez śladu stosu, reguła biznesowa z README dająca 409) jest spełnione.
+
+**Co zrobiło AI:** porównało wymaganie z `GlobalExceptionHandler`, wyjątkami, `AuthorService`,
+`BookService`, `SecurityConfig`, `application.yml` i opisem reguły w `README.md`. Wskazało, że błędy
+zgłaszane przez sam Spring (np. 404 dla nieistniejącego adresu, 405, 415) nie wracają jako Problem Details,
+że `detail` z `ex.getMessage()` w handlerze 400 ujawnia nazwy klas, a także nieużywany wyjątek
+`InvalidDateOfBirthException` i zbędny średnik w `AuthorService`. Zaproponowało dziedziczenie po
+`ResponseEntityExceptionHandler`, wyjaśniło działanie `@Order` dla klas `@ControllerAdvice`
+(kolejność advice, priorytet `ProblemDetailsExceptionHandler` Boota) i uruchomiło `./gradlew compileJava`.
+
+**Co przyjęłam:** samodzielnie wybrałam wariant z `@Order(Ordered.HIGHEST_PRECEDENCE)` na
+`GlobalExceptionHandler` i włączeniem `spring.mvc.problem-details.enabled` w `application.yml`
+oraz usunęłam `InvalidDateOfBirthException`. AI nie zmieniało kodu w repozytorium.
